@@ -1,7 +1,7 @@
 from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query
 from sqlmodel import select
-from models import (Usuario, UsuarioBase)
+from models import Usuario, UsuarioBase
 from app.db import SessionDep
 from uuid import UUID
 router = APIRouter()
