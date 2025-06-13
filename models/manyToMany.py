@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, Field, Relationship, TIMESTAMP
+from sqlmodel import SQLModel, Field, TIMESTAMP
 from datetime import datetime
 from uuid import UUID
 from typing import Optional

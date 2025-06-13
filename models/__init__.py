@@ -5,3 +5,4 @@ from models.PropiedadModel import Propiedad
 from models.manyToMany import UsuarioPropiedad
 from models.ReservaModel import Reserva
 from models.ValoracionModel import Valoracion
+from models.BoletaModel import Boleta
