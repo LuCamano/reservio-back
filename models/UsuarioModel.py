@@ -10,7 +10,7 @@ class UsuarioBase(SQLModel):
     appaterno: str = Field(max_length=100, nullable=False)
     apmaterno: str = Field(max_length=100, nullable=False)
     fecha_nacimiento: date = Field(nullable=False)
-    tipo: UserType = Field(default='cliente', sa_type=Enum(UserType))
+    tipo: UserType = Field(default=UserType.cliente, sa_type=Enum(UserType))
     password: str = Field(max_length=100, nullable=False)
 
 class Token(SQLModel):
