@@ -1,7 +1,9 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
-from views import router as views_router
+from controllers.Media import MEDIA_DIR
 from .db import create_db_and_tables
+from views import routers
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -13,6 +15,7 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     app = FastAPI(lifespan=lifespan)
     # Register routers
-    app.include_router(views_router, prefix="/api/v1", tags=["api"])
-    
+    app.mount("/media", StaticFiles(directory=MEDIA_DIR), name="media")
+    for router in routers:
+        app.include_router(router)
     return app

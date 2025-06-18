@@ -1,10 +1,7 @@
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
-import uuid
-from sqlmodel import TEXT, TIMESTAMP, Field, Relationship, SQLModel
-from models.PropiedadModel import Propiedad
-from models.UsuarioModel import Usuario
+from sqlmodel import TEXT, TIMESTAMP, Field, SQLModel
 
 ## Modelo de valoracion
 class ValoracionBase(SQLModel):
@@ -13,8 +10,4 @@ class ValoracionBase(SQLModel):
     comentario: Optional[str] = Field(default=None, nullable=True, sa_type=TEXT)
     cliente_id: Optional[UUID] = Field(default=None, foreign_key="usuario.id")
     propiedad_id: Optional[UUID] = Field(default=None, foreign_key="propiedad.id")
-    
-class Valoracion(ValoracionBase, table=True):
-    __tablename__ = "valoracion"
-    id: Optional[UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
     

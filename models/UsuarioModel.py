@@ -1,11 +1,6 @@
-from typing import Optional
 from datetime import date
-import uuid
-from uuid import UUID
-from sqlmodel import SQLModel, Field, Enum, Relationship
-from models.PropiedadModel import Propiedad
+from sqlmodel import SQLModel, Field, Enum
 from models.types import UserType
-from models.manyToMany import UsuarioPropiedad
 
 ## Modelo de Usuario
 class UsuarioBase(SQLModel):
@@ -17,11 +12,7 @@ class UsuarioBase(SQLModel):
     fecha_nacimiento: date = Field(nullable=False)
     tipo: UserType = Field(default='cliente', sa_type=Enum(UserType))
     password: str = Field(max_length=100, nullable=False)
-    
-class Usuario(UsuarioBase, table=True):
-    __tablename__ = "usuario"
-    id: Optional[UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
-    fecha_creacion: date = Field(default=date.today())
-    activo: bool = Field(default=True)
-    propiedades: list["Propiedad"] = Relationship(back_populates="propietarios", link_model=UsuarioPropiedad, sa_relationship_kwargs={"lazy": "selectin"})
-    
+
+class Token(SQLModel):
+    access_token: str
+    token_type: str
