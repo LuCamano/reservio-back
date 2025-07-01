@@ -1,8 +1,8 @@
-from datetime import datetime, date
+from datetime import datetime, date, time
 from typing import List, Optional
 from uuid import UUID
 import uuid
-from sqlmodel import JSON, Column, Field, Relationship, TIMESTAMP, SQLModel
+from sqlmodel import JSON, Column, Field, Relationship, TIMESTAMP, SQLModel, TEXT
 
 from models.types import UserType
 from .UsuarioModel import UsuarioBase
@@ -18,8 +18,7 @@ from .manyToMany import UsuarioPropiedad
 class Usuario(UsuarioBase, table=True):
     __tablename__ = "usuario"
     id: Optional[UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
-    fecha_creacion: date = Field(default=date.today())
-    activo: bool = Field(default=True)
+    fecha_creacion: datetime = Field(default=datetime.now(), sa_type=TIMESTAMP)
     propiedades: list["Propiedad"] = Relationship(link_model=UsuarioPropiedad, back_populates="propietarios")
 
 class Region(RegionBase, table=True):
@@ -59,6 +58,14 @@ class Valoracion(ValoracionBase, table=True):
     propiedad: Optional[Propiedad] = Relationship(back_populates="valoraciones")
     cliente: Optional[Usuario] = Relationship()
     
+class BloqueoUsuario(SQLModel, table=True):
+    id: Optional[UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
+    motivo: str = Field(sa_type=TEXT, nullable=False)
+    fecha_bloqueo: datetime = Field(default=datetime.now(), sa_type=TIMESTAMP)
+    fecha_desbloqueo: Optional[datetime] = Field(default=None, sa_type=TIMESTAMP)
+    usuario_id: UUID = Field(foreign_key="usuario.id", nullable=False)
+    administrador_id: UUID = Field(foreign_key="usuario.id", nullable=False)
+    
 ## Clases de lectura (heredan de su base)
 class UsuarioRead(SQLModel):
     id: UUID
@@ -69,7 +76,23 @@ class UsuarioRead(SQLModel):
     apmaterno: str
     fecha_nacimiento: date
     tipo: UserType
-    fecha_creacion: date
-    activo: bool
+    fecha_creacion: datetime
     propiedades: list["Propiedad"] = []
     
+class PropiedadRead(SQLModel):
+    id: UUID
+    nombre: Optional[str]
+    descripcion: str
+    direccion: str
+    tipo: str
+    cod_postal: str
+    capacidad: Optional[int]
+    precio_hora: int
+    hora_apertura: Optional[time]
+    hora_cierre: Optional[time]
+    comuna_id: Optional[UUID]
+    activo: bool
+    imagenes: Optional[List[str]]
+    comuna: Optional[Comuna]
+    propietarios: list["Usuario"]
+    valoraciones: list["Valoracion"]
