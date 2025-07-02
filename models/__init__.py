@@ -4,7 +4,7 @@ from uuid import UUID
 import uuid
 from sqlmodel import JSON, Column, Field, Relationship, TIMESTAMP, SQLModel, TEXT
 
-from models.types import UserType
+from models.types import UserType, PagoStatus, ComisionStatus
 from .UsuarioModel import UsuarioBase
 from .ComunaModel import ComunaBase
 from .RegionModel import RegionBase
@@ -12,6 +12,8 @@ from .PropiedadModel import PropiedadBase
 from .ReservaModel import ReservaBase
 from .BoletaModel import BoletaBase
 from .ValoracionModel import ValoracionBase
+from .PagoModel import PagoBase
+from .ComisionModel import ComisionBase
 from .manyToMany import UsuarioPropiedad
 
 # Clases tabla (heredan de su base)
@@ -46,6 +48,7 @@ class Reserva(ReservaBase, table=True):
     id: Optional[UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
     fecha_creacion: datetime = Field(default=datetime.now(), sa_type=TIMESTAMP)
     boleta: Optional["Boleta"] = Relationship(back_populates="reserva")
+    pagos: list["Pago"] = Relationship(back_populates="reserva")
 
 class Boleta(BoletaBase, table=True):
     __tablename__ = "boleta"
@@ -57,6 +60,18 @@ class Valoracion(ValoracionBase, table=True):
     id: Optional[UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
     propiedad: Optional[Propiedad] = Relationship(back_populates="valoraciones")
     cliente: Optional[Usuario] = Relationship()
+
+class Pago(PagoBase, table=True):
+    __tablename__ = "pago"
+    id: Optional[UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
+    reserva: Optional[Reserva] = Relationship(back_populates="pagos")
+    comisiones: list["Comision"] = Relationship(back_populates="pago")
+
+class Comision(ComisionBase, table=True):
+    __tablename__ = "comision"
+    id: Optional[UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
+    pago: Optional[Pago] = Relationship(back_populates="comisiones")
+    propietario: Optional[Usuario] = Relationship()
     
 class BloqueoUsuario(SQLModel, table=True):
     id: Optional[UUID] = Field(default_factory=uuid.uuid4, primary_key=True)

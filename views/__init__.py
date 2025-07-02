@@ -6,6 +6,7 @@ from .ReservaViews import router as reserva_router
 from .BoletaViews import router as boleta_router
 from .ValoracionViews import router as valoracion_router
 from .AuthViews import router as auth_router
+from .PagoViews import router as pago_router
 
 routers = [
     auth_router,
@@ -16,4 +17,5 @@ routers = [
     reserva_router,
     boleta_router,
     valoracion_router,
+    pago_router,
 ]
