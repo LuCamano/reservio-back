@@ -10,7 +10,8 @@ origins = [
     "http://www.reservio.space",
     "https://www.reservio.space",
     "http://reservio.space",
-    "https://reservio.space"
+    "https://reservio.space",
+    "http://localhost:4200"
 ]
 
 
