@@ -6,6 +6,7 @@ from models import UsuarioRead, Usuario
 from services.UsuarioService import UsuarioService
 from typing import Annotated, Optional
 from app.Auth import get_current_user
+from datetime import datetime
 
 router = APIRouter(prefix="/api/v1/usuarios", tags=["Usuarios"], dependencies=[Depends(get_current_user)])
 
@@ -21,8 +22,6 @@ async def get_usuarios(
     try:
         ## Preparar filtros ######################
         filtros = {}
-        if activo is not None:
-            filtros["activo"] = activo
         ##########################################
         usuarios = UsuarioService.read_all(session=session, offset=offset, limit=limit, order_by=order_by, filtros=filtros)
         if not usuarios:
@@ -44,16 +43,16 @@ async def get_usuario(usuario_id: UUID, session: SessionDep):
 
 ## Bloquear a un usuario
 @router.post("/{usuario_id}/bloquear")
-async def bloquear_usuario(usuario_id: UUID, session: SessionDep):
+async def bloquear_usuario(usuario_id: UUID, administrador_id: UUID, motivo: str, session: SessionDep, fecha_desbloqueo: Optional[datetime] = Query(None, description="Fecha de desbloqueo (opcional)")):
     try:
         usuario: Usuario = UsuarioService.read(session, obj_id=usuario_id)
+        isActive = UsuarioService.isActive(session, usuario_id)
         if not usuario:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
-        if not usuario.activo:
+        if not isActive:
             raise HTTPException(status_code=400, detail="El usuario ya está bloqueado")
         
-        usuario.activo = False
-        UsuarioService.update(session, obj=usuario)
+        UsuarioService.block_user(session=session, user_id=usuario_id, motivo=motivo, fecha_desbloqueo=fecha_desbloqueo, administrador_id=administrador_id)
         return JSONResponse(status_code=200, content={"message": "Usuario bloqueado exitosamente"})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -65,11 +64,10 @@ async def desbloquear_usuario(usuario_id: UUID, session: SessionDep):
         usuario: Usuario = UsuarioService.read(session, obj_id=usuario_id)
         if not usuario:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
-        if usuario.activo:
+        if UsuarioService.isActive(session, usuario_id):
             raise HTTPException(status_code=400, detail="El usuario ya está activo")
-        
-        usuario.activo = True
-        UsuarioService.update(session, obj=usuario)
+
+        UsuarioService.unblock_user(session, usuario_id)
         return JSONResponse(status_code=200, content={"message": "Usuario desbloqueado exitosamente"})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

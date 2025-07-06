@@ -14,4 +14,5 @@ class PropiedadBase(SQLModel):
     precio_hora: int = Field(default=0, nullable=False)
     hora_apertura: Optional[time] = Field(default=None, nullable=True)
     hora_cierre: Optional[time] = Field(default=None, nullable=True)
+    validada: bool = Field(default=False, nullable=False)
     comuna_id: Optional[UUID] = Field(default=None, foreign_key="comuna.id")
