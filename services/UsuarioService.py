@@ -62,3 +62,28 @@ class UsuarioService(BaseService):
                 (BloqueoUsuario.fecha_desbloqueo > now)
             ).order_by(BloqueoUsuario.fecha_bloqueo.desc())  # El más reciente primero
         ).first()
+        
+    @classmethod
+    def block_user(cls, session: SessionDep, user_id: UUID, administrador_id: UUID, motivo: str, fecha_desbloqueo: datetime | None = None) -> BloqueoUsuario:
+        bloqueo = BloqueoUsuario(usuario_id=user_id, motivo=motivo, 
+                                administrador_id=administrador_id,
+                                fecha_desbloqueo=fecha_desbloqueo
+                                )
+        session.add(bloqueo)
+        session.commit()
+        session.refresh(bloqueo)
+        return bloqueo
+    
+    @classmethod
+    def unblock_user(cls, session: SessionDep, user_id: UUID):
+        # Buscar el bloqueo activo más reciente
+        bloqueo_activo = cls.get_active_block(session, user_id)
+        if not bloqueo_activo:
+            raise ValueError("El usuario no tiene bloqueos activos")
+        
+        # Actualizar la fecha de desbloqueo
+        bloqueo_activo.fecha_desbloqueo = datetime.now()
+        session.add(bloqueo_activo)
+        session.commit()
+        session.refresh(bloqueo_activo)
+        return bloqueo_activo

@@ -18,9 +18,25 @@ async def get_propiedades(
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 50,
     order_by: Optional[str] = None,
+    tipo: Optional[str] = Query(None, description="Filtrar por tipo de propiedad"),
+    comuna_id: Optional[UUID] = Query(None, description="Filtrar por comuna"),
+    precio_min: Optional[int] = Query(None, description="Precio mínimo por hora"),
+    precio_max: Optional[int] = Query(None, description="Precio máximo por hora")
 ):
     try:
-        propiedades = PropiedadService.read_all(session, offset=offset, limit=limit, order_by=order_by)
+        ## Preparar filtros ######################
+        filtros = {}
+        if tipo:
+            filtros["tipo"] = tipo
+        if comuna_id:
+            filtros["comuna_id"] = comuna_id
+        if precio_min is not None:
+            filtros["precio_hora__gte"] = precio_min
+        if precio_max is not None:
+            filtros["precio_hora__lte"] = precio_max
+        ##########################################
+        # Leer todas las propiedades con los filtros y ordenamiento
+        propiedades = PropiedadService.read_all(session, offset=offset, limit=limit, order_by=order_by, filtros=filtros)
         return propiedades
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -51,7 +67,8 @@ async def create_propiedad(
     usuario_id: UUID = Form(...),
     hora_apertura: str = Form(None),  # Formato "HH:MM"
     hora_cierre: str = Form(None),    # Formato "HH:MM"
-    images: List[UploadFile] = File(default_factory=list)
+    images: List[UploadFile] = File(default_factory=list),
+    documento: UploadFile | None = File(None)
 ):
     try:
         # Convertir strings de hora a objetos time si se proporcionaron
@@ -84,7 +101,7 @@ async def create_propiedad(
             hora_apertura=hora_apertura_obj,
             hora_cierre=hora_cierre_obj
         )
-        propiedad = PropiedadService.create(session, obj=obj, images=images)
+        propiedad = PropiedadService.create(session, obj=obj, images=images, documento=documento)
         # Crear relación usuario-propiedad correctamente
         usuario_propiedad = UsuarioPropiedad(usuario_id=usuario_id, propiedad_id=propiedad.id)
         UsuarioPropiedadService.create(session, obj=usuario_propiedad)
@@ -107,7 +124,8 @@ async def update_propiedad(
     comuna_id: UUID = Form(None),
     hora_apertura: str = Form(None),  # Formato "HH:MM"
     hora_cierre: str = Form(None),    # Formato "HH:MM"
-    images: List[UploadFile] = File(default_factory=list)
+    images: List[UploadFile] = File(default_factory=list),
+    documento: UploadFile | None = File(None)
 ):
     try:
         propiedad: Propiedad = PropiedadService.read(session, obj_id=propiedad_id)
@@ -149,15 +167,18 @@ async def update_propiedad(
             except ValueError:
                 raise HTTPException(status_code=400, detail="Formato de hora_cierre inválido. Use HH:MM")
         
+        # Primero actualizar los campos básicos
+        session.add(propiedad)
+        session.commit()
+        session.refresh(propiedad)
+        
         # Manejar las imágenes si se proporcionaron
         if images and any(img.filename for img in images if img):
-            # Usar el método de actualización con imágenes del servicio
             propiedad = PropiedadService.update_with_images(session, propiedad_id=propiedad_id, images=images)
-        else:
-            # Solo actualizar los campos básicos
-            session.add(propiedad)
-            session.commit()
-            session.refresh(propiedad)
+        
+        # Manejar el documento si se proporcionó
+        if documento and documento.filename:
+            propiedad = PropiedadService.update_document(session, propiedad_id=propiedad_id, documento=documento)
         
         return propiedad
     except Exception as e:

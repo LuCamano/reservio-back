@@ -16,9 +16,15 @@ async def get_comunas(
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 50,
     order_by: Optional[str] = None,
+    region_id: Optional[UUID] = None,  # Filtro opcional por región
 ):
     try:
-        comunas = ComunaService.read_all(session, offset=offset, limit=limit, order_by=order_by)
+        ## Preparar filtros ######################
+        filtros = {}
+        if region_id:
+            filtros["region_id"] = region_id
+        ##########################################
+        comunas = ComunaService.read_all(session, offset=offset, limit=limit, order_by=order_by, filtros=filtros)
         return comunas
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -39,6 +39,7 @@ class Propiedad(PropiedadBase, table=True):
     id: Optional[UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
     activo: bool = Field(default=True)
     imagenes: Optional[List[str]] = Field(default_factory=list, sa_column=Column(JSON))
+    documento: Optional[str] = Field(default=None, sa_type=TEXT, nullable=True)
     comuna: Optional[Comuna] = Relationship(back_populates="propiedades")
     propietarios: list["Usuario"] = Relationship(link_model=UsuarioPropiedad, back_populates="propiedades")
     valoraciones: list["Valoracion"] = Relationship(back_populates="propiedad")
@@ -106,8 +107,10 @@ class PropiedadRead(SQLModel):
     hora_apertura: Optional[time]
     hora_cierre: Optional[time]
     comuna_id: Optional[UUID]
+    validada: bool
     activo: bool
     imagenes: Optional[List[str]]
-    comuna: Optional[Comuna]
+    documento: Optional[str]
+    comuna: Optional["Comuna"]
     propietarios: list["Usuario"]
     valoraciones: list["Valoracion"]
