@@ -16,8 +16,7 @@ async def get_usuarios(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 50,
-    order_by: str | None = None,
-    activo: Optional[bool] = Query(None, description="Filtrar por usuarios activos (True) o inactivos (False)")
+    order_by: str | None = None
 ):
     try:
         ## Preparar filtros ######################
