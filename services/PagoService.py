@@ -3,7 +3,7 @@ from typing import Dict, Any, Optional
 from uuid import UUID
 from datetime import datetime
 from sqlmodel import Session, select
-
+import os
 from app.db import get_session
 from models import Pago, Comision, Reserva, Usuario
 from models.types import PagoStatus, ComisionStatus
@@ -63,11 +63,11 @@ class MercadoPagoService:
                 }
             ],
             "external_reference": str(pago.id),
-            "notification_url": "https://tu-dominio.com/webhook/mercadopago",  # Cambiar por tu URL
+            "notification_url": os.getenv("MERCADOPAGO_WEBHOOK_URL", "https://example.com/webhook"),
             "back_urls": {
-                "success": "https://tu-frontend.com/pago/exito",
-                "failure": "https://tu-frontend.com/pago/error",
-                "pending": "https://tu-frontend.com/pago/pendiente"
+                "success": os.getenv("FRONTEND_SUCCESS_URL", "https://example.com"),
+                "failure": os.getenv("FRONTEND_ERROR_URL", "https://example.com"),
+                "pending": os.getenv("FRONTEND_PENDING_URL", "https://example.com")
             },
             "auto_return": "approved"
         }

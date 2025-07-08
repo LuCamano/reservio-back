@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlmodel import Session
 from typing import Dict, Any
 from uuid import UUID
 import os
 
-from app.db import get_session
+from app.db import SessionDep
 from app.Auth import get_current_user
 from models import Usuario
 from services.PagoService import MercadoPagoService
@@ -29,8 +28,8 @@ def get_mp_service():
 @router.post("/crear-preferencia/{reserva_id}")
 async def crear_preferencia_pago(
     reserva_id: UUID,
-    current_user: Usuario = Depends(get_current_user),
-    session: Session = Depends(get_session)
+    session: SessionDep,
+    current_user: Usuario = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """
     Crea una preferencia de pago en MercadoPago para una reserva
@@ -50,7 +49,7 @@ async def crear_preferencia_pago(
 @router.post("/webhook")
 async def webhook_mercadopago(
     request: Request,
-    session: Session = Depends(get_session)
+    session: SessionDep,
 ):
     """
     Webhook para recibir notificaciones de MercadoPago
@@ -77,8 +76,8 @@ async def webhook_mercadopago(
 @router.get("/estado/{pago_id}")
 async def obtener_estado_pago(
     pago_id: UUID,
-    current_user: Usuario = Depends(get_current_user),
-    session: Session = Depends(get_session)
+    session: SessionDep,
+    current_user: Usuario = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """
     Obtiene el estado actual de un pago
@@ -96,8 +95,8 @@ async def obtener_estado_pago(
 
 @router.get("/comisiones/mis-pagos")
 async def obtener_mis_comisiones(
-    current_user: Usuario = Depends(get_current_user),
-    session: Session = Depends(get_session)
+    session: SessionDep,
+    current_user: Usuario = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """
     Obtiene las comisiones (pagos pendientes) del propietario actual
@@ -129,8 +128,8 @@ async def obtener_mis_comisiones(
 
 @router.get("/admin/comisiones-a-pagar")
 async def obtener_comisiones_a_pagar(
-    current_user: Usuario = Depends(get_current_user),
-    session: Session = Depends(get_session)
+    session: SessionDep,
+    current_user: Usuario = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """
     Obtiene todas las comisiones que están listas para ser pagadas (solo para administradores)
@@ -152,8 +151,8 @@ async def obtener_comisiones_a_pagar(
 @router.put("/admin/procesar-comision/{comision_id}")
 async def procesar_comision(
     comision_id: UUID,
-    current_user: Usuario = Depends(get_current_user),
-    session: Session = Depends(get_session)
+    session: SessionDep,
+    current_user: Usuario = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """
     Marca una comisión como procesada (solo para administradores)
@@ -175,8 +174,8 @@ async def procesar_comision(
 @router.put("/admin/completar-comision/{comision_id}")
 async def completar_comision(
     comision_id: UUID,
-    current_user: Usuario = Depends(get_current_user),
-    session: Session = Depends(get_session)
+    session: SessionDep,
+    current_user: Usuario = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """
     Marca una comisión como completada (solo para administradores)
