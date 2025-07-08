@@ -1,4 +1,5 @@
 from app.db import SessionDep
+from models.types import UserType
 from services import BaseService
 from models import Usuario, UsuarioBase, BloqueoUsuario
 from app.Auth import get_password_hash
@@ -87,3 +88,18 @@ class UsuarioService(BaseService):
         session.commit()
         session.refresh(bloqueo_activo)
         return bloqueo_activo
+    
+    @classmethod
+    def cambiar_tipo(cls, session: SessionDep, user_id: UUID, nuevo_tipo: UserType) -> Usuario:
+        """
+        Cambia el tipo de usuario (por ejemplo, de 'cliente' a 'propietario').
+        """
+        usuario: Usuario = session.get(cls.model, user_id)
+        if not usuario:
+            raise ValueError("Usuario no encontrado")
+
+        usuario.tipo = nuevo_tipo
+        session.add(usuario)
+        session.commit()
+        session.refresh(usuario)
+        return usuario
