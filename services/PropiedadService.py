@@ -65,3 +65,27 @@ class PropiedadService(BaseService):
         session.commit()
         session.refresh(db_obj)
         return db_obj
+    
+    @classmethod
+    def validate_property(cls, session: SessionDep, propiedad_id: UUID):
+        db_obj: Propiedad = session.get(cls.model, propiedad_id)
+        if not db_obj:
+            raise ValueError(f"No existe una propiedad con id {propiedad_id}")
+        db_obj.validada = True
+        session.add(db_obj)
+        session.commit()
+        session.refresh(db_obj)
+        return {"id": str(db_obj.id), "validada": db_obj.validada}
+    
+    @classmethod
+    def toggle_active_status(cls, session: SessionDep, propiedad_id: UUID):
+        db_obj: Propiedad = session.get(cls.model, propiedad_id)
+        if not db_obj:
+            raise ValueError(f"No existe una propiedad con id {propiedad_id}")
+        
+        # Toggle active status
+        db_obj.activo = not db_obj.activo
+        session.add(db_obj)
+        session.commit()
+        session.refresh(db_obj)
+        return {"id": str(db_obj.id), "activo": db_obj.activo}
