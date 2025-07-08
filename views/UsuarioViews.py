@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, Query, Depends
 from fastapi.responses import JSONResponse
 from app.db import SessionDep
 from models import UsuarioRead, Usuario
+from models.types import UserType
 from services.UsuarioService import UsuarioService
 from typing import Annotated, Optional
 from app.Auth import get_current_user
@@ -85,5 +86,19 @@ async def update_usuario(usuario_id: UUID, usuario_data: UsuarioRead, session: S
         
         updated_usuario = UsuarioService.update(session, obj=usuario)
         return updated_usuario
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+## Cambiar tipo de usuario
+@router.put("/{usuario_id}/cambiar_tipo")
+async def cambiar_tipo_usuario(usuario_id: UUID, nuevo_tipo: UserType, session: SessionDep):
+    try:
+        usuario: Usuario = UsuarioService.read(session, obj_id=usuario_id)
+        if not usuario:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+        usuario.tipo = nuevo_tipo
+        UsuarioService.update(session, obj=usuario)
+        return {"message": "Tipo de usuario actualizado exitosamente"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

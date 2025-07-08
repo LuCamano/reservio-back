@@ -56,38 +56,38 @@ async def get_propiedad(propiedad_id: UUID, session: SessionDep):
 @router.post("/", response_model=Propiedad, status_code=status.HTTP_201_CREATED, dependencies=[Depends(get_current_user)])
 async def create_propiedad(
     session: SessionDep,
-    nombre: str = Form(...),
+    nombre: str | None = Form(None),
     descripcion: str = Form(...),
     direccion: str = Form(...),
     tipo: str = Form(...),
     cod_postal: str = Form(...),
-    capacidad: int = Form(...),
+    capacidad: int | None = Form(None),
     precio_hora: int = Form(...),
     comuna_id: UUID = Form(...),
     usuario_id: UUID = Form(...),
-    hora_apertura: str = Form(None),  # Formato "HH:MM"
-    hora_cierre: str = Form(None),    # Formato "HH:MM"
+    hora_apertura: time | None = Form(None),  # Formato "HH:MM"
+    hora_cierre: time | None = Form(None),    # Formato "HH:MM"
     images: List[UploadFile] = File(default_factory=list),
     documento: UploadFile | None = File(None)
 ):
     try:
         # Convertir strings de hora a objetos time si se proporcionaron
-        hora_apertura_obj = None
-        hora_cierre_obj = None
+        # hora_apertura_obj = None
+        # hora_cierre_obj = None
         
-        if hora_apertura:
-            try:
-                hour, minute = map(int, hora_apertura.split(':'))
-                hora_apertura_obj = time(hour, minute)
-            except ValueError:
-                raise HTTPException(status_code=400, detail="Formato de hora_apertura inválido. Use HH:MM")
+        # if hora_apertura:
+        #     try:
+        #         hour, minute = map(int, hora_apertura.split(':'))
+        #         hora_apertura_obj = time(hour, minute)
+        #     except ValueError:
+        #         raise HTTPException(status_code=400, detail="Formato de hora_apertura inválido. Use HH:MM")
         
-        if hora_cierre:
-            try:
-                hour, minute = map(int, hora_cierre.split(':'))
-                hora_cierre_obj = time(hour, minute)
-            except ValueError:
-                raise HTTPException(status_code=400, detail="Formato de hora_cierre inválido. Use HH:MM")
+        # if hora_cierre:
+        #     try:
+        #         hour, minute = map(int, hora_cierre.split(':'))
+        #         hora_cierre_obj = time(hour, minute)
+        #     except ValueError:
+        #         raise HTTPException(status_code=400, detail="Formato de hora_cierre inválido. Use HH:MM")
         
         obj = PropiedadBase(
             nombre=nombre,
@@ -98,8 +98,8 @@ async def create_propiedad(
             capacidad=capacidad,
             precio_hora=precio_hora,
             comuna_id=comuna_id,
-            hora_apertura=hora_apertura_obj,
-            hora_cierre=hora_cierre_obj
+            hora_apertura=hora_apertura,
+            hora_cierre=hora_cierre
         )
         propiedad = PropiedadService.create(session, obj=obj, images=images, documento=documento)
         # Crear relación usuario-propiedad correctamente
@@ -114,16 +114,16 @@ async def create_propiedad(
 async def update_propiedad(
     propiedad_id: UUID,
     session: SessionDep,
-    nombre: str = Form(None),
+    nombre: str | None = Form(None),
     descripcion: str = Form(None),
     direccion: str = Form(None),
     tipo: str = Form(None),
     cod_postal: str = Form(None),
-    capacidad: int = Form(None),
+    capacidad: int | None = Form(None),
     precio_hora: int = Form(None),
     comuna_id: UUID = Form(None),
-    hora_apertura: str = Form(None),  # Formato "HH:MM"
-    hora_cierre: str = Form(None),    # Formato "HH:MM"
+    hora_apertura: time | None = Form(None),  # Formato "HH:MM"
+    hora_cierre: time | None = Form(None),    # Formato "HH:MM"
     images: List[UploadFile] = File(default_factory=list),
     documento: UploadFile | None = File(None)
 ):
@@ -149,23 +149,26 @@ async def update_propiedad(
             propiedad.precio_hora = precio_hora
         if comuna_id is not None:
             propiedad.comuna_id = comuna_id
-        
-        # Manejar las horas si se proporcionaron
         if hora_apertura is not None:
-            from datetime import time
-            try:
-                hour, minute = map(int, hora_apertura.split(':'))
-                propiedad.hora_apertura = time(hour, minute)
-            except ValueError:
-                raise HTTPException(status_code=400, detail="Formato de hora_apertura inválido. Use HH:MM")
-        
+            propiedad.hora_apertura = hora_apertura
         if hora_cierre is not None:
-            from datetime import time
-            try:
-                hour, minute = map(int, hora_cierre.split(':'))
-                propiedad.hora_cierre = time(hour, minute)
-            except ValueError:
-                raise HTTPException(status_code=400, detail="Formato de hora_cierre inválido. Use HH:MM")
+            propiedad.hora_cierre = hora_cierre
+        # Manejar las horas si se proporcionaron
+        # if hora_apertura is not None:
+        #     from datetime import time
+        #     try:
+        #         hour, minute = map(int, hora_apertura.split(':'))
+        #         propiedad.hora_apertura = time(hour, minute)
+        #     except ValueError:
+        #         raise HTTPException(status_code=400, detail="Formato de hora_apertura inválido. Use HH:MM")
+        
+        # if hora_cierre is not None:
+        #     from datetime import time
+        #     try:
+        #         hour, minute = map(int, hora_cierre.split(':'))
+        #         propiedad.hora_cierre = time(hour, minute)
+        #     except ValueError:
+        #         raise HTTPException(status_code=400, detail="Formato de hora_cierre inválido. Use HH:MM")
         
         # Primero actualizar los campos básicos
         session.add(propiedad)
@@ -193,5 +196,33 @@ async def delete_propiedad(propiedad_id: UUID, session: SessionDep):
             raise HTTPException(status_code=404, detail="Propiedad no encontrada")
         PropiedadService.delete(session, obj_id=propiedad_id)
         return {"ok": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+## Validar una propiedad
+@router.post("/{propiedad_id}/validar", response_model=dict, dependencies=[Depends(get_current_user)])
+async def validate_propiedad(propiedad_id: UUID, session: SessionDep):
+    try:
+        propiedad: Propiedad = PropiedadService.read(session, obj_id=propiedad_id)
+        if not propiedad:
+            raise HTTPException(status_code=404, detail="Propiedad no encontrada")
+        if propiedad.validada:
+            raise HTTPException(status_code=400, detail="La propiedad ya está validada")
+        
+        result = PropiedadService.validate_property(session, propiedad_id)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+## Cambiar el estado activo de una propiedad
+@router.post("/{propiedad_id}/toggle-active", response_model=dict, dependencies=[Depends(get_current_user)])
+async def toggle_active_status(propiedad_id: UUID, session: SessionDep):
+    try:
+        propiedad: Propiedad = PropiedadService.read(session, obj_id=propiedad_id)
+        if not propiedad:
+            raise HTTPException(status_code=404, detail="Propiedad no encontrada")
+        
+        result = PropiedadService.toggle_active_status(session, propiedad_id)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
