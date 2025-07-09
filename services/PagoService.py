@@ -70,7 +70,7 @@ class MercadoPagoService:
             ],
             "external_reference": str(pago.id),
             "notification_url": NOTIF_URL,
-            "back_urls": {
+            "back_url": {
                 "success": SUCCESS_URL,
                 "failure": ERROR_URL,
                 "pending": PENDING_URL
