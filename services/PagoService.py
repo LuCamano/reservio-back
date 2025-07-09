@@ -64,7 +64,7 @@ class MercadoPagoService:
                 {
                     "title": f"Reserva de propiedad",
                     "quantity": 1,
-                    "unit_price": monto_total / 100,  # MercadoPago usa valores sin centavos
+                    "unit_price": monto_total,  # MercadoPago usa valores sin centavos
                     "currency_id": "CLP"
                 }
             ],
@@ -75,7 +75,7 @@ class MercadoPagoService:
                 "failure": ERROR_URL,
                 "pending": PENDING_URL
             },
-            "auto_return": "all"
+            "auto_return": "approved"
         }
         
         # Crear la preferencia en MercadoPago
