@@ -8,6 +8,12 @@ from app.db import get_session
 from models import Pago, Comision, Reserva, Usuario
 from models.types import PagoStatus, ComisionStatus
 
+NOTIF_URL = os.getenv("MERCADOPAGO_WEBHOOK_URL")
+
+SUCCESS_URL = os.getenv("FRONTEND_SUCCESS_URL")
+ERROR_URL = os.getenv("FRONTEND_ERROR_URL")
+PENDING_URL = os.getenv("FRONTEND_PENDING_URL")
+
 
 class MercadoPagoService:
     def __init__(self, access_token: str):
@@ -63,11 +69,11 @@ class MercadoPagoService:
                 }
             ],
             "external_reference": str(pago.id),
-            "notification_url": os.getenv("MERCADOPAGO_WEBHOOK_URL", "https://example.com/webhook"),
+            "notification_url": NOTIF_URL,
             "back_urls": {
-                "success": os.getenv("FRONTEND_SUCCESS_URL", "https://example.com"),
-                "failure": os.getenv("FRONTEND_ERROR_URL", "https://example.com"),
-                "pending": os.getenv("FRONTEND_PENDING_URL", "https://example.com")
+                "success": SUCCESS_URL,
+                "failure": ERROR_URL,
+                "pending": PENDING_URL
             },
             "auto_return": "approved"
         }
