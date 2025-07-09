@@ -22,6 +22,7 @@ class Usuario(UsuarioBase, table=True):
     id: Optional[UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
     fecha_creacion: datetime = Field(default=datetime.now(), sa_type=TIMESTAMP)
     propiedades: list["Propiedad"] = Relationship(link_model=UsuarioPropiedad, back_populates="propietarios")
+    bloqueos: list["BloqueoUsuario"] = Relationship(back_populates="usuario", sa_relationship_kwargs={"foreign_keys": "BloqueoUsuario.usuario_id"})
 
 class Region(RegionBase, table=True):
     __tablename__ = "region"
@@ -81,6 +82,8 @@ class BloqueoUsuario(SQLModel, table=True):
     fecha_desbloqueo: Optional[datetime] = Field(default=None, sa_type=TIMESTAMP)
     usuario_id: UUID = Field(foreign_key="usuario.id", nullable=False)
     administrador_id: UUID = Field(foreign_key="usuario.id", nullable=False)
+    usuario: Optional["Usuario"] = Relationship(back_populates="bloqueos", sa_relationship_kwargs={"foreign_keys": "BloqueoUsuario.usuario_id"})
+    administrador: Optional["Usuario"] = Relationship(sa_relationship_kwargs={"foreign_keys": "BloqueoUsuario.administrador_id"})
     
 ## Clases de lectura (heredan de su base)
 class UsuarioRead(SQLModel):
@@ -94,6 +97,7 @@ class UsuarioRead(SQLModel):
     tipo: UserType
     fecha_creacion: datetime
     propiedades: list["Propiedad"] = []
+    bloqueos: list["BloqueoUsuario"] = []
     
 class PropiedadRead(SQLModel):
     id: UUID
