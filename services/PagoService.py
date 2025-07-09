@@ -70,12 +70,12 @@ class MercadoPagoService:
             ],
             "external_reference": str(pago.id),
             "notification_url": NOTIF_URL,
-            "back_url": {
+            "back_urls": {
                 "success": SUCCESS_URL,
                 "failure": ERROR_URL,
                 "pending": PENDING_URL
             },
-            "auto_return": "approved"
+            "auto_return": "all"
         }
         
         # Crear la preferencia en MercadoPago
